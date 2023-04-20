@@ -4,49 +4,61 @@ on:
     branches: [ '*' ]
   pull_request:
     branches: [ '*' ]
+env:
+  CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
 jobs:
   standard:
     runs-on: ubuntu-latest
     steps:
+
       - uses: actions/checkout@v3
         with:
-          path: ./aws-lc
-      - uses: actions/checkout@v3
-        with:
-          repository: awslabs/aws-lc-rust
-          path: ./aws-lc-rust
+          repository: awslabs/aws-lc-rs
+          path: ./aws-lc-rs
           submodules: false
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
           override: true
-      - run: |
-          sudo apt-get -y --no-install-recommends update
-          sudo apt-get -y --no-install-recommends upgrade
-          sudo apt-get -y --no-install-recommends install cmake gcc
-      - working-directory: ./aws-lc-rust
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: rust-script
+      - name: Install OS Dependencies
         run: |
-          rm -rf ./aws-lc-sys/aws-lc
-          ln -s ../aws-lc ./aws-lc-sys/aws-lc
-      - uses: actions-rs/cargo@v1
-        working-directory: ./aws-lc-rust/aws-lc-sys
+          sudo apt-get -y --no-install-recommends install cmake gcc clang ninja-build golang
+      - name: Remove aws-lc submodule from crate directory
+        working-directory: ./aws-lc-rs/aws-lc-sys
+        run: |
+          rm -rf aws-lc
+      - uses: actions/checkout@v3
         with:
-          command: build
-          args: --release
-      - uses: actions-rs/cargo@v1
-        working-directory: ./aws-lc-rust/aws-lc-sys
-        with:
-          command: test
-      - uses: actions-rs/cargo@v1
-        working-directory: ./aws-lc-rust/aws-lc-sys
-        with:
-          command: package
-      - uses: actions-rs/cargo@v1
-        working-directory: ./aws-lc-rust/aws-lc-rust
-        with:
-          command: build
-          args: --release
-      - uses: actions-rs/cargo@v1
-        working-directory: ./aws-lc-rust/aws-lc-rust
-        with:
-          command: test
+          path: ./aws-lc-rs/aws-lc-sys/aws-lc
+      - name: Regenerate aws-lc-sys crate
+        working-directory: ./aws-lc-rs/aws-lc-sys
+        run: |
+          rm -rf symbols/*
+          rm -rf generated-include/*
+          ../scripts/generate/_collect_symbols_build.sh -c aws-lc-sys
+          ../scripts/generate/_generate_prefix_headers.sh -c aws-lc-sys
+          ../scripts/generate/_generate_bindings.sh -c aws-lc-sys
+      - name: aws-lc-sys build
+        working-directory: ./aws-lc-rs/aws-lc-sys
+        run: |
+          cargo build
+      - name: aws-lc-sys test
+        working-directory: ./aws-lc-rs/aws-lc-sys
+        run: |
+          cargo test
+      - name: aws-lc-sys packaging
+        working-directory: ./aws-lc-rs/aws-lc-sys
+        run: |
+          cargo package --allow-dirty
+      - name: aws-lc-rs build
+        working-directory: ./aws-lc-rs/aws-lc-rs
+        run: |
+          cargo build
+      - name: aws-lc-rs test
+        working-directory: ./aws-lc-rs/aws-lc-rs
+        run: |
+          cargo test
