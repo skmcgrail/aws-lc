@@ -200,12 +200,12 @@ int main(int argc, char **argv) {
     goto err;
   }
   printf("About to AES-ECB encrypt ");
-  hexdump(output, out_len);
+  hexdump(kPlaintext, sizeof(kPlaintext));
   for (size_t j = 0; j < sizeof(kPlaintext) / 16; j++) {
-    AES_ecb_encrypt(&kPlaintext[j * 128], & output[j * 128], &aes_key, AES_ENCRYPT);
+    AES_ecb_encrypt(&kPlaintext[j * 16], &output[j * 16], &aes_key, AES_ENCRYPT);
   }
   printf("  got ");
-  hexdump(output, out_len);
+  hexdump(output, sizeof(kPlaintext));
 
   /* AES-ECB Decryption */
   OPENSSL_memset(aes_iv, 0, sizeof(aes_iv));
@@ -214,12 +214,12 @@ int main(int argc, char **argv) {
     goto err;
   }
   printf("About to AES-ECB decrypt ");
-  hexdump(output, out_len);
+  hexdump(output, sizeof(kPlaintext));
   for (size_t j = 0; j < out_len / 16; j++) {
-    AES_ecb_encrypt(&output[j * 128], & output[j * 128], &aes_key, AES_DECRYPT);
+    AES_ecb_encrypt(&output[j * 16], &output[j * 16], &aes_key, AES_DECRYPT);
   }
   printf("  got ");
-  hexdump(output, out_len);
+  hexdump(output, sizeof(kPlaintext));
 
   OPENSSL_cleanse(&aes_key, sizeof(aes_key));
 
@@ -234,19 +234,19 @@ int main(int argc, char **argv) {
     goto err;
   }
   printf("About to AES-CTR Encrypt ");
-  hexdump(output, out_len);
+  hexdump(kPlaintext, sizeof(kPlaintext));
   AES_ctr128_encrypt(kPlaintext, output, sizeof(kPlaintext), &aes_key, aes_iv, ecount_buf, &num);
   printf("  got ");
-  hexdump(output, out_len);
+  hexdump(output, sizeof(kPlaintext));
 
 
   /* AES-CTR Decryption */
   OPENSSL_memset(aes_iv, 0, sizeof(aes_iv));
   printf("About to AES-CTR Decrypt ");
   hexdump(output, out_len);
-  AES_ctr128_encrypt(output, output, out_len, &aes_key, aes_iv, ecount_buf, &num);
+  AES_ctr128_encrypt(output, output, sizeof(kPlaintext), &aes_key, aes_iv, ecount_buf, &num);
   printf("  got ");
-  hexdump(output, out_len);
+  hexdump(output, sizeof(kPlaintext));
 
   OPENSSL_cleanse(&aes_key, sizeof(aes_key));
 
