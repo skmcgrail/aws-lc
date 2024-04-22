@@ -1191,7 +1191,7 @@ const (
 	instrThreeArg
 	// instrCompare takes two arguments and writes outputs to the flags register.
 	instrCompare
-	instrAdd
+	instrTwoArg
 	instrOther
 )
 
@@ -1234,11 +1234,6 @@ func classifyInstruction(instr string, args []*node32) instructionType {
 			return instrCompare
 		}
 
-	case "addq":
-		if len(args) == 2 {
-			return instrAdd
-		}
-
 	case "sarxq", "shlxq", "shrxq", "pinsrq":
 		if len(args) == 3 {
 			return instrThreeArg
@@ -1252,6 +1247,11 @@ func classifyInstruction(instr string, args []*node32) instructionType {
 	case "movlps", "movhps":
 		if len(args) == 2 {
 			return instrMemoryVectorCombine
+		}
+
+	case "addq":
+		if len(args) == 2 {
+			return instrTwoArg
 		}
 	}
 
@@ -1273,7 +1273,7 @@ func compare(w stringWriter, instr, a, b string) wrapperFunc {
 	}
 }
 
-func add(w stringWriter, instr, a, b string) wrapperFunc {
+func twoArgOp(w stringWriter, instr, a, b string) wrapperFunc {
 	return func(k func()) {
 		k()
 		w.WriteString(fmt.Sprintf("\t%s %s, %s\n", instr, a, b))
@@ -1525,17 +1525,6 @@ Args:
 						wrappers = append(wrappers, compare(d.output, instructionName, otherSource, tempReg))
 					}
 					targetReg = tempReg
-				case instrAdd:
-					otherSource := d.contents(argNodes[i^1])
-					saveRegWrapper, tempReg := saveRegister(d.output, []string{otherSource})
-					redzoneCleared = true
-					wrappers = append(wrappers, saveRegWrapper)
-					if i == 0 {
-						wrappers = append(wrappers, add(d.output, instructionName, tempReg, otherSource))
-					} else {
-						wrappers = append(wrappers, add(d.output, instructionName, otherSource, tempReg))
-					}
-					targetReg = tempReg
 				case instrTransformingMove:
 					assertNodeType(argNodes[1], ruleRegisterOrConstant)
 					targetReg = d.contents(argNodes[1])
@@ -1588,6 +1577,17 @@ Args:
 					} else {
 						wrappers = append(wrappers, threeArgCombineOp(d.output, instructionName, otherSource, tempReg, targetReg))
 					}
+					targetReg = tempReg
+				case instrTwoArg:
+					if n := len(argNodes); n != 2 {
+						return nil, fmt.Errorf("two-argument instruction has %d arguments", n)
+					}
+					assertNodeType(argNodes[1], ruleRegisterOrConstant)
+					otherSource := d.contents(argNodes[1])
+					saveRegWrapper, tempReg := saveRegister(d.output, []string{otherSource})
+					redzoneCleared = true
+					wrappers = append(wrappers, saveRegWrapper)
+					wrappers = append(wrappers, twoArgOp(d.output, instructionName, tempReg, otherSource))
 					targetReg = tempReg
 				default:
 					return nil, fmt.Errorf("Cannot rewrite GOTPCREL reference for instruction %q", instructionName)
