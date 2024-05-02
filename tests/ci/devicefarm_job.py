@@ -7,20 +7,19 @@ import time
 import datetime
 import time
 import json
-from cdk.util.devicefarm_util import AWS_REGION, ANDROID_TEST_NAME, ANDROID_APK, ANDROID_TEST_APK, DEVICEFARM_PROJECT, DEVICEFARM_DEVICE_POOL
 from arnparse import arnparse
 
 
 config = {
-    "awsRegion": AWS_REGION,
-    "namePrefix": ANDROID_TEST_NAME,
-    "appFilePath": ANDROID_APK,
-    "testPackage": ANDROID_TEST_APK,
-    "projectArn": DEVICEFARM_PROJECT,
-    "poolArn": DEVICEFARM_DEVICE_POOL,
+    "awsRegion": 'us-west-2',
+    "namePrefix": 'V1370229819',
+    "appFilePath": '/Volumes/Brazil/workspace/aws-lc/tests/ci/android/AWSLCAndroidTestRunner/app/build/outputs/apk/debug/awslc_fips.apk',
+    "testPackage": '/Volumes/Brazil/workspace/aws-lc/tests/ci/android/AWSLCAndroidTestRunner/app/build/outputs/apk/androidTest/debug/awslc_fips-androidTest.apk',
+    "projectArn": 'arn:aws:devicefarm:us-west-2:431229050501:project:d9875c14-8ab7-45cc-8d3c-d1951de25ce4',
+    "poolArn": 'arn:aws:devicefarm:us-west-2:431229050501:devicepool:d9875c14-8ab7-45cc-8d3c-d1951de25ce4/6744a50c-b364-4253-846d-889f08c093df',
 }
 
-client = boto3.client('devicefarm', region_name=AWS_REGION)
+client = boto3.client('devicefarm', region_name=config['awsRegion'])
 
 unique = config['namePrefix']
 aws_region = config['awsRegion']
