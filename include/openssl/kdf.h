@@ -32,6 +32,26 @@ OPENSSL_EXPORT int CRYPTO_tls1_prf(const EVP_MD *digest,
                                    const uint8_t *seed1, size_t seed1_len,
                                    const uint8_t *seed2, size_t seed2_len);
 
+// SSKDF_DIGEST computes the One-step (Single-step) key derivation using the
+// provided digest algorithm as the backing PRF.
+//
+// Returns a 1 on success, otherwise returns 0.
+OPENSSL_EXPORT int SSKDF_DIGEST(uint8_t *out_key, size_t out_len,
+                                const EVP_MD *digest, const uint8_t *secret,
+                                size_t secret_len, const uint8_t *info,
+                                size_t info_len);
+
+// SSKDF_HMAC computes the One-step (Single-step) key derivation using the
+// provided digest algorithm with HMAC as the backing PRF. |salt| optional
+// and may be |NULL|.
+//
+// Returns a 1 on success, otherwise returns 0.
+OPENSSL_EXPORT int SSKDF_HMAC(uint8_t *out_key, size_t out_len,
+                              const EVP_MD *digest, const uint8_t *secret,
+                              size_t secret_len, const uint8_t *info,
+                              size_t info_len, const uint8_t *salt,
+                              size_t salt_len);
+
 // KDF support for EVP.
 
 
