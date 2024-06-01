@@ -52,6 +52,13 @@ OPENSSL_EXPORT int SSKDF_HMAC(uint8_t *out_key, size_t out_len,
                               size_t info_len, const uint8_t *salt,
                               size_t salt_len);
 
+// KBKDF_CTR derives keying material using the KDF counter mode algorithm,
+// using the provided key derivation key |secret| and fixed info |info|.
+OPENSSL_EXPORT int KBKDF_CTR(uint8_t *out_key, size_t out_len,
+                             const EVP_MD *digest, const uint8_t *secret,
+                             size_t secret_len, const uint8_t *info,
+                             size_t info_len);
+
 // KDF support for EVP.
 
 

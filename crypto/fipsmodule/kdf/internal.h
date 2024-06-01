@@ -1,6 +1,9 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: Apache-2.0 OR ISC
 
+#ifndef OPENSSL_HEADER_KDF_INTERNAL_H
+#define OPENSSL_HEADER_KDF_INTERNAL_H
+
 #include <openssl/digest.h>
 #include <openssl/hmac.h>
 
@@ -27,3 +30,5 @@ typedef struct {
 const SSKDF_VARIANT *SSKDF_VARIANT_DIGEST(void);
 
 const SSKDF_VARIANT *SSKDF_VARIANT_HMAC(void);
+
+#endif // OPENSSL_HEADER_KDF_INTERNAL_H
