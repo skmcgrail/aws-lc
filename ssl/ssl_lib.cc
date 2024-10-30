@@ -2433,7 +2433,7 @@ void SSL_CTX_set_next_proto_select_cb(SSL_CTX *ctx,
 }
 
 int SSL_CTX_set_alpn_protos(SSL_CTX *ctx, const uint8_t *protos,
-                            size_t protos_len) {
+                            uint32_t protos_len) {
   // Note this function's return value is backwards.
   auto span = MakeConstSpan(protos, protos_len);
   if (!span.empty() && !ssl_is_valid_alpn_list(span)) {

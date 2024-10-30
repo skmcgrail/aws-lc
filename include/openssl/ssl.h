@@ -3289,7 +3289,7 @@ OPENSSL_EXPORT SSL_CTX *SSL_set_SSL_CTX(SSL *ssl, SSL_CTX *ctx);
 // WARNING: this function is dangerous because it breaks the usual return value
 // convention.
 OPENSSL_EXPORT int SSL_CTX_set_alpn_protos(SSL_CTX *ctx, const uint8_t *protos,
-                                           size_t protos_len);
+                                           uint32_t protos_len);
 
 // SSL_set_alpn_protos sets the client ALPN protocol list on |ssl| to |protos|.
 // |protos| must be in wire-format (i.e. a series of non-empty, 8-bit

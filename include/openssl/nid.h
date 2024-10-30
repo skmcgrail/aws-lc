@@ -4363,6 +4363,14 @@ extern "C" {
 #define NID_SecP256r1MLKEM768 992
 #define OBJ_SecP256r1MLKEM768 1L, 3L, 9999L, 99L, 55L
 
+#define SN_kx_dhe "KxDHE"
+#define LN_kx_dhe "kx-dhe"
+#define NID_kx_dhe 993
+
+#define SN_auth_dss "AuthDSS"
+#define LN_auth_dss "auth-dss"
+#define NID_auth_dss 994
+
 #if defined(__cplusplus)
 } /* extern C */
 #endif

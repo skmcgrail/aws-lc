@@ -437,10 +437,10 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len) {
       },
       [](SSL_CTX *ctx, CBS *cbs) {
         std::vector<uint8_t> protos;
-        if (!GetVector(&protos, cbs)) {
+        if (!GetVector(&protos, cbs) || protos.size() > UINT32_MAX) {
           return;
         }
-        SSL_CTX_set_alpn_protos(ctx, protos.data(), protos.size());
+        SSL_CTX_set_alpn_protos(ctx, protos.data(), (uint32_t)protos.size());
       },
       [](SSL_CTX *ctx, CBS *cbs) {
         std::string profiles;

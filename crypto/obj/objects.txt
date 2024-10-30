@@ -1401,3 +1401,7 @@ nist_kem 3 : MLKEM1024
 # https://github.com/IETF-Hackathon/pqc-certificates/blob/master/docs/oid_mapping.md
 # as we await NIST to release official OIDs.
 1 3 6 1 4 1 2 267 7 6 5 : DILITHIUM3_R3
+
+# NIDs for OpenSSL symbol compatability only
+ : KxDHE : kx-dhe
+ : AuthDSS : auth-dss

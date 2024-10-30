@@ -475,7 +475,9 @@ bool Client(const std::vector<std::string> &args) {
                      len);
       i = j + 1;
     }
-    if (SSL_CTX_set_alpn_protos(ctx.get(), wire.data(), wire.size()) != 0) {
+    if (wire.size() > UINT32_MAX ||
+        SSL_CTX_set_alpn_protos(ctx.get(), wire.data(),
+                                (uint32_t)wire.size()) != 0) {
       return false;
     }
   }
