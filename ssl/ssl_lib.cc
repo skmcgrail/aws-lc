@@ -3378,9 +3378,9 @@ int SSL_set_tlsext_status_ocsp_resp(SSL *ssl, uint8_t *resp, size_t resp_len) {
   return 0;
 }
 
-size_t SSL_get_tlsext_status_ocsp_resp(const SSL *ssl, const uint8_t **out) {
+size_t SSL_get_tlsext_status_ocsp_resp(const SSL *ssl, uint8_t **out) {
   size_t ret;
-  SSL_get0_ocsp_response(ssl, out, &ret);
+  SSL_get0_ocsp_response(ssl, (const uint8_t **)out, &ret);
   return ret;
 }
 

@@ -5553,7 +5553,7 @@ OPENSSL_EXPORT int SSL_set_tlsext_status_ocsp_resp(SSL *ssl, uint8_t *resp,
 //
 // WARNING: the returned data is not guaranteed to be well formed.
 OPENSSL_EXPORT size_t SSL_get_tlsext_status_ocsp_resp(const SSL *ssl,
-                                                      const uint8_t **out);
+                                                      uint8_t **out);
 
 // SSL_CTX_set_tlsext_status_cb configures the legacy OpenSSL OCSP callback and
 // returns one. Though the type signature is the same, this callback has
