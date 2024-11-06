@@ -4371,6 +4371,10 @@ extern "C" {
 #define LN_auth_dss "auth-dss"
 #define NID_auth_dss 994
 
+#define SN_auth_null "AuthNULL"
+#define LN_auth_null "auth-null"
+#define NID_auth_null 995
+
 #if defined(__cplusplus)
 } /* extern C */
 #endif

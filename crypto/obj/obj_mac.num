@@ -982,3 +982,4 @@ X25519MLKEM768		991
 SecP256r1MLKEM768		992
 kx_dhe		993
 auth_dss		994
+auth_null		995

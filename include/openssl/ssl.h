@@ -5402,6 +5402,7 @@ OPENSSL_EXPORT const char *SSL_state_string(const SSL *ssl);
 #define SSL_TXT_aPSK "aPSK"
 #define SSL_TXT_DH "DH"
 #define SSL_TXT_DHE "DHE"
+#define SSL_TXT_DSS "DSS"
 #define SSL_TXT_EDH "EDH"
 #define SSL_TXT_RSA "RSA"
 #define SSL_TXT_ECDH "ECDH"
