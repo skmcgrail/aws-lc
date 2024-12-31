@@ -50,7 +50,7 @@ class LinuxDockerImageBatchBuildStack(Stack):
         vpc = ec2.Vpc(self, id="{}-ec2-vpc".format(id))
 
         # Define CodeBuild project.
-        project = codebuild.Project(
+        self.codebuild = codebuild.Project(
             scope=self,
             id=id,
             vpc=vpc,
@@ -64,4 +64,4 @@ class LinuxDockerImageBatchBuildStack(Stack):
             role=role,
             timeout=Duration.minutes(180),
             build_spec=codebuild.BuildSpec.from_object(build_spec_content))
-        project.enable_batch_builds()
+        self.codebuild.enable_batch_builds()
