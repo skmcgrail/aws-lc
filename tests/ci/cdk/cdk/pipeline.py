@@ -91,12 +91,20 @@ class AwsLcCiPipeline(Stack):
             ),
         )
 
+        image_build_asset = Asset(
+            self,
+            "TriggerDockerImageBuildsScript",
+            path="cdk/codebuild/codebuild_start_wait.sh",
+        )
+
         dev_stage = AwsLcCiAppStage(
             self,
             "DevStage",
             env=Environment(account=AWS_ACCOUNT, region=AWS_REGION),
         )
-        dev_stage.add_stage_to_pipeline(pipeline)
+        dev_stage.add_stage_to_pipeline(
+            pipeline, assets={"image_build": image_build_asset}
+        )
 
 
 class AwsLcCiAppStage(Stage):
@@ -239,14 +247,10 @@ class AwsLcCiAppStage(Stage):
         )
         self.ci_android_stack.add_dependency(self.ci_linux_x86_stack)
 
-        self.trigger_image_build_asset = Asset(
-            self,
-            "TriggerDockerImageBuildsScript",
-            path="cdk/codebuild/codebuild_start_wait.sh",
-        )
-
     # Adds this stage to the pipeline and adds any required validation actions
-    def add_stage_to_pipeline(self, pipeline: pipelines.PipelineBase):
+    def add_stage_to_pipeline(
+        self, pipeline: pipelines.PipelineBase, assets: dict[str, Asset]
+    ):
         pipeline.add_stage(
             self,
             stack_steps=[
@@ -258,7 +262,10 @@ class AwsLcCiAppStage(Stage):
                             commands=[
                                 "./codebuild_start_wait.sh",
                             ],
-                            input=self.trigger_image_build_asset,
+                            input=pipelines.CodePipelineSource.s3(
+                                assets["image_build"].bucket,
+                                assets["image_build"].s3_object_key,
+                            ),
                             role_policy_statements=[
                                 iam.PolicyStatement(
                                     effect=iam.Effect.ALLOW,
@@ -271,35 +278,7 @@ class AwsLcCiAppStage(Stage):
                                         "codebuild:StopBuild",
                                     ],
                                     resources=[
-                                        self.linux_docker_build_stack.codebuild_project.project_arn
-                                    ],
-                                )
-                            ],
-                        )
-                    ],
-                ),
-                pipelines.StackSteps(
-                    stack=self.windows_docker_build_stack,
-                    post=[
-                        pipelines.CodeBuildStep(
-                            "TriggerWindowsDockerImageBuilds",
-                            commands=[
-                                "./codebuild_start_wait.sh",
-                            ],
-                            input=self.trigger_image_build_asset,
-                            role_policy_statements=[
-                                iam.PolicyStatement(
-                                    effect=iam.Effect.ALLOW,
-                                    actions=[
-                                        "codebuild:BatchGetBuilds",
-                                        "codebuild:ListBuildBatches",
-                                        "codebuild:ListBuildBatchesForProject",
-                                        "codebuild:ListBuilds",
-                                        "codebuild:StartBuild",
-                                        "codebuild:StopBuild",
-                                    ],
-                                    resources=[
-                                        self.windows_docker_build_stack.codebuild_project.project_arn
+                                        self.linux_docker_build_stack.codebuild_project_arn.import_value
                                     ],
                                 )
                             ],
