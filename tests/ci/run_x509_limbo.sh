@@ -13,6 +13,7 @@ source tests/ci/common_posix_setup.sh
 SCRATCH_DIR="${SYS_ROOT}/scratch"
 X509_CI_DIR="${SRC_ROOT}/tests/ci/x509"
 X509_LIMBO_SRC="${SCRATCH_DIR}/x509-limbo"
+BASE_COMMIT_SRC="${SYS_ROOT}/base-src"
 
 function build_reporting_tool() {
     pushd "${X509_CI_DIR}/limbo-report"
@@ -30,9 +31,11 @@ function clone_and_patch_x509_limbo() {
 
 function run_aws_lc_harness() {
     pushd "${X509_LIMBO_SRC}"
-    AWS_LC_SRC_DIR="${SRC_ROOT}" make test-aws-lc
+    AWS_LC_SRC_DIR="${1}" make test-aws-lc
     popd # "${X509_LIMBO_SRC}"
 }
+
+git worktree add "${BASE_COMMIT_SRC}" "${CODEBUILD_WEBHOOK_BASE_REF:?}"
 
 mkdir -p "${SCRATCH_DIR}"
 rm -rf "${SCRATCH_DIR:?}"/*
@@ -40,7 +43,33 @@ pushd "${SCRATCH_DIR}"
 
 build_reporting_tool
 clone_and_patch_x509_limbo
-run_aws_lc_harness
+
+REPORTS_DIR="${SRC_ROOT}/x509-limbo-reports"
+
+# Build run x509-limbo on current src of event
+run_aws_lc_harness "${SRC_ROOT}"
+"${SCRATCH_DIR}/limbo-report" annotate "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" | tee "${REPORTS_DIR}/base.json"
+"${SCRATCH_DIR}/limbo-report" annotate -csv "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" | tee "${REPORTS_DIR}/base.csv"
+
+# Build run x509-limbo on the base src for event
+run_aws_lc_harness "${BASE_COMMIT_SRC}"
+"${SCRATCH_DIR}/limbo-report" annotate "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" | tee "${REPORTS_DIR}/changes.json"
+"${SCRATCH_DIR}/limbo-report" annotate -csv "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" | tee "${REPORTS_DIR}/changes.csv"
+
+# Produce diff report
+set +e
+"${SCRATCH_DIR}/limbo-report" diff "${REPORTS_DIR}/base.json" "${REPORTS_DIR}/changes.json" | tee "${REPORTS_DIR}/summary.txt"
+DIFF_RET_STATUS=$?
 
 popd # "${SCRATCH_DIR}"
-# rm -rf "${SCRATCH_DIR:?}"
+
+# Don't cleanup in CodeBuild cause we need to upload the artifacts
+if [[ -v CODEBUILD_SRC_DIR ]]; then
+    rm -rf "${SCRATCH_DIR:?}"
+fi
+
+if [ $DIFF_RET_STATUS -eq 0 ]; then
+    exit 0
+else
+    exit 1
+fi
