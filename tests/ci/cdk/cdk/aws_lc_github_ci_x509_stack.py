@@ -49,6 +49,8 @@ class AwsLcGitHubX509CIStack(Stack):
                 "cdk/codebuild/github_ci_x509_omnibus.yaml"
             ),
             artifacts=codebuild.Artifacts.s3(
-                bucket=self.reports_bucket, package_zip=False
+                bucket=self.reports_bucket,
+                package_zip=False,
+                include_build_id=False,
             ),
         )
