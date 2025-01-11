@@ -14,6 +14,7 @@ SCRATCH_DIR="${SYS_ROOT}/scratch"
 X509_CI_DIR="${SRC_ROOT}/tests/ci/x509"
 X509_LIMBO_SRC="${SCRATCH_DIR}/x509-limbo"
 BASE_COMMIT_SRC="${SYS_ROOT}/base-src"
+BASE_REF="${BASE_REF:-${CODEBUILD_WEBHOOK_BASE_REF:?}}"
 
 function build_reporting_tool() {
     pushd "${X509_CI_DIR}/limbo-report"
@@ -35,7 +36,7 @@ function run_aws_lc_harness() {
     popd # "${X509_LIMBO_SRC}"
 }
 
-git worktree add "${BASE_COMMIT_SRC}" "${CODEBUILD_WEBHOOK_BASE_REF:?}"
+git worktree add "${BASE_COMMIT_SRC}" "${BASE_REF:?}"
 
 mkdir -p "${SCRATCH_DIR}"
 rm -rf "${SCRATCH_DIR:?}"/*
@@ -59,14 +60,11 @@ run_aws_lc_harness "${BASE_COMMIT_SRC}"
 # Produce diff report
 set +e
 "${SCRATCH_DIR}/limbo-report" diff "${REPORTS_DIR}/base.json" "${REPORTS_DIR}/changes.json" | tee "${REPORTS_DIR}/summary.txt"
-DIFF_RET_STATUS=$?
+DIFF_RET_STATUS=${PIPESTATUS[0]}
 
+set -e
 popd # "${SCRATCH_DIR}"
-
-# Don't cleanup in CodeBuild cause we need to upload the artifacts
-if [[ -v CODEBUILD_SRC_DIR ]]; then
-    rm -rf "${SCRATCH_DIR:?}"
-fi
+rm -rf "${SCRATCH_DIR:?}"
 
 if [ $DIFF_RET_STATUS -eq 0 ]; then
     exit 0
