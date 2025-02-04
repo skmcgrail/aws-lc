@@ -1,4 +1,4 @@
-from aws_cdk import Stack, aws_codebuild as codebuild, aws_s3 as s3
+from aws_cdk import Duration, Stack, aws_codebuild as codebuild, aws_s3 as s3
 from constructs import Construct
 from util.build_spec_loader import BuildSpecLoader
 from util.metadata import (
@@ -38,6 +38,38 @@ class AwsLcGitHubX509CIStack(Stack):
             self,
             "aws-lc-x509-reports",
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            versioned=True,
+        )
+
+        self.reports_bucket.add_lifecycle_rule(
+            enabled=True,
+            prefix="x509-limbo/",
+            transitions=[
+                s3.Transition(
+                    storage_class=s3.StorageClass.INTELLIGENT_TIERING,
+                    transition_after=Duration.days(30),
+                ),
+            ],
+            noncurrent_version_transitions=[
+                s3.NoncurrentVersionTransition(
+                    storage_class=s3.StorageClass.INTELLIGENT_TIERING,
+                    transition_after=Duration.days(30),
+                ),
+            ],
+        )
+        self.reports_bucket.add_lifecycle_rule(
+            enabled=True,
+            prefix="x509-limbo/pr/",
+            expiration=Duration.days(30),
+            noncurrent_version_expiration=Duration.days(1),
+        )
+
+        # This is for the case of a manual build is triggered via CodeBuild console/API.
+        self.reports_bucket.add_lifecycle_rule(
+            enabled=True,
+            prefix=f"x509-limbo/{id}:",
+            expiration=Duration.days(30),
+            noncurrent_version_expiration=Duration.days(1),
         )
 
         self.codebuild_project = codebuild.Project(
@@ -47,6 +79,11 @@ class AwsLcGitHubX509CIStack(Stack):
             source=git_hub_source,
             build_spec=BuildSpecLoader.load(
                 "cdk/codebuild/github_ci_x509_omnibus.yaml"
+            ),
+            environment=codebuild.BuildEnvironment(
+                build_image=codebuild.LinuxBuildImage.STANDARD_6_0,
+                compute_type=codebuild.ComputeType.LARGE,
+                privileged=True,
             ),
             artifacts=codebuild.Artifacts.s3(
                 bucket=self.reports_bucket,

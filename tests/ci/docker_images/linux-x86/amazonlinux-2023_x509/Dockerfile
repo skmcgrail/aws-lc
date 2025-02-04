@@ -5,16 +5,24 @@ FROM amazonlinux-2023:clang-15x
 
 SHELL ["/bin/bash", "-c"]
 
-# clang 15.0.6 is the latest version versions `yum --showduplicates list clang`
 RUN set -ex && \
     dnf -y upgrade --releasever=latest && dnf install -y \
     docker \
-    patch && \
+    openssl-devel \
+    patch \
+    jq && \
     dnf clean packages && \
     dnf clean metadata && \
     dnf clean all && \
     rm -rf /tmp/* && \
     rm -rf /var/cache/dnf
 
+RUN curl -fsSL https://pyenv.run | bash
+
+ENV PATH="/root/.pyenv/bin:${PATH}"
+RUN eval "$(pyenv init -)" && \
+    pyenv install 3.13.1
+
+ENV PATH="/root/.pyenv/versions/3.13.1/bin:${PATH}"
 ENV CC=clang
 ENV CXX=clang++

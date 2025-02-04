@@ -23,18 +23,31 @@ function build_reporting_tool() {
     popd # "${X509_CI_DIR}/limbo-report"
 }
 
-function clone_and_patch_x509_limbo() {
+function setup_x509_limbo() {
     git clone https://github.com/C2SP/x509-limbo.git "${X509_LIMBO_SRC}"
     pushd "${X509_LIMBO_SRC}"
     patch -p1 -i "${X509_CI_DIR}/x509-limbo.patch"
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -e .
     popd # "${X509_LIMBO_SRC}"
 }
 
 function run_aws_lc_harness() {
     pushd "${X509_LIMBO_SRC}"
+    set +e
     AWS_LC_SRC_DIR="${1}" make test-aws-lc
+    if [ ! -f "${X509_LIMBO_SRC}/results/aws-lc.json" ]; then
+        echo "Failed to run x509-limbo harness for AWS_LC_SRC_DIR=${1}"
+        exit 1
+    fi
+    set -e
     popd # "${X509_LIMBO_SRC}"
 }
+
+# Log Docker hub limit https://docs.docker.com/docker-hub/download-rate-limit/#how-can-i-check-my-current-rate
+TOKEN=$(curl "https://auth.docker.io/token?service=registry.docker.io&scope=repository:ratelimitpreview/test:pull" | jq -r .token)
+curl --head -H "Authorization: Bearer $TOKEN" https://registry-1.docker.io/v2/ratelimitpreview/test/manifests/latest
 
 git worktree add "${BASE_COMMIT_SRC}" "${BASE_REF:?}"
 
@@ -43,19 +56,20 @@ rm -rf "${SCRATCH_DIR:?}"/*
 pushd "${SCRATCH_DIR}"
 
 build_reporting_tool
-clone_and_patch_x509_limbo
+setup_x509_limbo
 
 REPORTS_DIR="${SRC_ROOT}/x509-limbo-reports"
+mkdir -p "${REPORTS_DIR}"
 
 # Build run x509-limbo on current src of event
 run_aws_lc_harness "${SRC_ROOT}"
-"${SCRATCH_DIR}/limbo-report" annotate "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" | tee "${REPORTS_DIR}/base.json"
-"${SCRATCH_DIR}/limbo-report" annotate -csv "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" | tee "${REPORTS_DIR}/base.csv"
+"${SCRATCH_DIR}/limbo-report" annotate "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" > "${REPORTS_DIR}/base.json"
+"${SCRATCH_DIR}/limbo-report" annotate -csv "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" > "${REPORTS_DIR}/base.csv"
 
 # Build run x509-limbo on the base src for event
 run_aws_lc_harness "${BASE_COMMIT_SRC}"
-"${SCRATCH_DIR}/limbo-report" annotate "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" | tee "${REPORTS_DIR}/changes.json"
-"${SCRATCH_DIR}/limbo-report" annotate -csv "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" | tee "${REPORTS_DIR}/changes.csv"
+"${SCRATCH_DIR}/limbo-report" annotate "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" > "${REPORTS_DIR}/changes.json"
+"${SCRATCH_DIR}/limbo-report" annotate -csv "${X509_LIMBO_SRC}/limbo.json" "${X509_LIMBO_SRC}/results/aws-lc.json" > "${REPORTS_DIR}/changes.csv"
 
 # Produce diff report
 set +e
