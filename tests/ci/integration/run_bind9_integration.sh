@@ -27,6 +27,9 @@ BIND9_BUILD_FOLDER="${SCRATCH_FOLDER}/bind9-aws-lc"
 AWS_LC_BUILD_FOLDER="${SCRATCH_FOLDER}/aws-lc-build"
 AWS_LC_INSTALL_FOLDER="${SCRATCH_FOLDER}/aws-lc-install"
 
+env
+df -h
+
 function bind9_build() {
   BIND9_VERSION=$(meson introspect meson.build --projectinfo | jq -r '.version')
 
