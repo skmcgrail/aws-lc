@@ -30,3 +30,16 @@ class EcrStack(Stack):
             tag_status=ecr.TagStatus.UNTAGGED,
             max_image_age=Duration.days(1),
         )
+
+class EcrPrivateRepoStack(Stack):
+    """Define a stack of ECR to store pre-built Docker Images."""
+
+    def __init__(self, scope: Construct, id: str, repo_name: str, **kwargs) -> None:
+        super().__init__(scope, id, **kwargs)
+
+        self.repo = ecr.Repository(scope=self, id=id, repository_name=repo_name)
+        self.repo.add_lifecycle_rule(
+            description="Remove untagged images after 1 day",
+            tag_status=ecr.TagStatus.UNTAGGED,
+            max_image_age=Duration.days(90),
+        )

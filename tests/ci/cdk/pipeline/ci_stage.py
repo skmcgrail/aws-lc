@@ -16,7 +16,7 @@ from constructs import Construct
 
 from cdk.aws_lc_base_ci_stack import AwsLcBaseCiStack
 from cdk.aws_lc_github_actions_stack import AwsLcGitHubActionsStack
-from pipeline.ci_util import add_ci_stacks
+from pipeline.ci_util import add_ci_stacks, add_ecr_repos
 from pipeline.codebuild_batch_step import CodeBuildBatchStep
 from util.metadata import (
     PRE_PROD_ACCOUNT,

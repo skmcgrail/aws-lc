@@ -1,0 +1,14 @@
+name: docker-image-build
+on:
+    workflow_dispatch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+env:
+  GOPROXY: https://proxy.golang.org,direct
+jobs:
+    linux_x86:
+        runs-on:
+            codebuild-github-docker-image-build-${{ github.run_id }}-${{ github.run_attempt }}
+        steps:
+            - run: echo foo

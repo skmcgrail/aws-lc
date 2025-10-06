@@ -1,0 +1,40 @@
+import typing
+
+from aws_cdk import (
+    Stage,
+    Environment,
+    Stack,
+    aws_iam as iam,
+    pipelines,
+)
+from cdk.aws_lc_github_docker_actions_stack import AwsLcGitHubDockerActionsStack
+from constructs import Construct
+from pipeline.ci_util import add_ecr_repos
+
+
+class GitHubActionsStage(Stage):
+    """Define a stack of IAM role to allow cross-account deployment"""
+
+    def __init__(
+        self,
+        scope: Construct,
+        id: str,
+        pipeline_environment: typing.Union[Environment, typing.Dict[str, typing.Any]],
+        deploy_environment: typing.Union[Environment, typing.Dict[str, typing.Any]],
+        **kwargs,
+    ):
+        super().__init__(
+            scope,
+            id,
+            env=pipeline_environment,
+            **kwargs,
+        )
+
+        AwsLcGitHubDockerActionsStack(self, "aws-lc-github-docker-image-build", env=deploy_environment)
+
+    @property
+    def stacks(self):
+        return [child for child in self.node.children if isinstance(child, Stack)]
+    
+    def add_stage_to_wave(self, wave: pipelines.Wave):
+        wave.add_stage(self)
