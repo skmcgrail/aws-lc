@@ -1,5 +1,6 @@
 # Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 # SPDX-License-Identifier: Apache-2.0 OR ISC
+import itertools
 import typing
 
 from aws_cdk import (
@@ -38,7 +39,14 @@ class AwsLcGitHubDockerActionsStack(AwsLcBaseCiStack):
         repo_names = [UBUNTU_ECR_REPO, AMAZONLINUX_ECR_REPO, CENTOS_ECR_REPO, FEDORA_ECR_REPO]
         ecr_repos = [ecr.Repository.from_repository_name(self, x.replace('/', '-'), repository_name=x)
                      for x in repo_names]
-        registry_uri = ecr_repos[0].registry_uri
+        
+        staging_repo = ecr.Repository(self, "aws-lc-ecr-staging",
+                              image_tag_mutability=ecr.TagMutability.IMMUTABLE,
+                              lifecycle_rules=[ecr.LifecycleRule(
+                                  max_image_age=Duration.days(7),
+                              )])
+        
+        ecr_repos.append(staging_repo)
 
         inline_policies = {
             "metrics_policy": metrics_policy,
@@ -62,9 +70,9 @@ class AwsLcGitHubDockerActionsStack(AwsLcBaseCiStack):
                             "ecr:PutImage",
                             "ecr:UploadLayerPart",
                         ],
-                        resources=[
+                        resources=[x for x in itertools.chain([
                             x.repository_arn for x in ecr_repos
-                        ],
+                        ], [ecr.Repository.from_repository_name(self, "quay-io", "quay.io/*").repository_arn])],
                     ),
                 ],
             )
@@ -108,29 +116,10 @@ class AwsLcGitHubDockerActionsStack(AwsLcBaseCiStack):
                 build_image=codebuild.LinuxBuildImage.STANDARD_7_0,
                 environment_variables={
                     "AWS_ACCOUNT_ID": codebuild.BuildEnvironmentVariable(value=env.account),
-                    "ECR_REGISTRY_URL": codebuild.BuildEnvironmentVariable(value=ecr_repos[0].registry_uri),
+                    "ECR_REGISTRY_URL": codebuild.BuildEnvironmentVariable(value=staging_repo.registry_uri),
+                    "ECR_STAGING_REPO": codebuild.BuildEnvironmentVariable(value=staging_repo.repository_uri),
                 },
             ),
-            build_spec=codebuild.BuildSpec.from_object({
-                "version": 0.2,
-                "phases": {
-                    "pre_build": {
-                        "commands": [
-                            "mkdir -p /root/.docker",
-                            """\
-cat <<EOF > /root/.docker/config.json
-{{
-  "credHelpers": {{
-    "public.ecr.aws": "ecr-login",
-    "{}": "ecr-login"
-  }}
-}}
-EOF
-""".format(registry_uri)
-                        ]
-                    }
-                },
-            }),
         )
 
         cfn_project = project.node.default_child

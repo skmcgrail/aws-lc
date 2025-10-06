@@ -4,12 +4,10 @@ from aws_cdk import (
     Stage,
     Environment,
     Stack,
-    aws_iam as iam,
     pipelines,
 )
+from cdk.ecr_stack import PrivateEcrStackV2
 from constructs import Construct
-from pipeline.ci_util import add_ecr_repos
-
 
 class EcrStage(Stage):
     """Define a stack of IAM role to allow cross-account deployment"""
@@ -29,7 +27,7 @@ class EcrStage(Stage):
             **kwargs,
         )
 
-        add_ecr_repos(self, env=deploy_environment)
+        PrivateEcrStackV2(self, "aws-lc-private-ecr-stack", env=deploy_environment, **kwargs)
 
     @property
     def stacks(self):

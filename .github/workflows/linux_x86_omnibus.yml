@@ -18,14 +18,15 @@ jobs:
         buildspec-override:true
     steps:
       - uses: actions/checkout@v5
-      - name: Get ECR Repoistory URL
-        id: ecr
-        run: echo AWS_ECR_REPO_LINUX_X86=${AWS_ECR_REPO_LINUX_X86} >> "$GITHUB_OUTPUT"
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
       - uses: ./.github/actions/codebuild-docker-run
         name: Run Container
         with:
-          image: ${{ steps.ecr.outputs.AWS_ECR_REPO_LINUX_X86 }}:ubuntu-20.04_clang-8x_latest
+          image: ${{ steps.login-ecr.outputs.registry }}/aws-lc/ubuntu:20.04
           run: |
+            source /opt/compiler-env/setup-clang-8.sh
             ./tests/check_objects_and_errors.sh
             ./tests/check_cmake_configure.sh
             go run ./tests/check_licenses.go
@@ -41,14 +42,16 @@ jobs:
         buildspec-override:true
     steps:
       - uses: actions/checkout@v5
-      - name: Get ECR Repoistory URL
-        id: ecr
-        run: echo AWS_ECR_REPO_LINUX_X86=${AWS_ECR_REPO_LINUX_X86} >> "$GITHUB_OUTPUT"
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
       - uses: ./.github/actions/codebuild-docker-run
         name: Run Container
         with:
-          image: ${{ steps.ecr.outputs.AWS_ECR_REPO_LINUX_X86 }}:ubuntu-22.04_gcc-12x_latest
-          run: ./tests/coding_guidelines/c99_cplusplus98_test.sh
+          image: ${{ steps.login-ecr.outputs.registry }}/aws-lc/ubuntu:22.04
+          run: |
+            source /opt/compiler-env/setup-gcc-12.sh
+            ./tests/coding_guidelines/c99_cplusplus98_test.sh
 
   posix_tests:
     name: posix-tests-${{ matrix.image }}-${{ matrix.build32 && 'x86' || 'x86_64' }}
@@ -61,8 +64,6 @@ jobs:
       fail-fast: false
       matrix:
         image:
-          - amazonlinux-2_clang-7x_latest
-          - amazonlinux-2_gcc-7x_latest
           - amazonlinux-2023_clang-15x_latest
           - amazonlinux-2023_gcc-11x_latest
           - centos-7_gcc-4x_latest
@@ -80,6 +81,14 @@ jobs:
           - ubuntu-22.04_gcc-12x_latest
         build32: [0] 
         include:
+          - image: amazonlinux:2
+            compiler: clang-7
+          - image: amazonlinux:2
+            compiler: gcc-7
+          - image: centos:7
+            compiler: gcc-4
+
+            # Old
           - image: centos-7_gcc-4x_latest
             build32: 1
           - image: fedora-31_clang-9x_latest

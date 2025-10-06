@@ -4,12 +4,10 @@ from aws_cdk import (
     Stage,
     Environment,
     Stack,
-    aws_iam as iam,
     pipelines,
 )
 from cdk.aws_lc_github_docker_actions_stack import AwsLcGitHubDockerActionsStack
 from constructs import Construct
-from pipeline.ci_util import add_ecr_repos
 
 
 class GitHubActionsStage(Stage):

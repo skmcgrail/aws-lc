@@ -295,7 +295,7 @@ class AwsLcCiPipeline(Stack):
 
         pipeline.add_stage(setup_stage)
 
-        ecr_stage = EcrStage(self, f"{deploy_environment_type.value}-EcrDcokerImageRepos",
+        ecr_stage = EcrStage(self, f"{deploy_environment_type.value}-EcrRepositories",
                              pipeline_environment=pipeline_environment,
                              deploy_environment=deploy_environment)
         pipeline.add_stage(ecr_stage)

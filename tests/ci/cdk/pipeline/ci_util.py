@@ -1,7 +1,7 @@
 import typing
 import dataclasses
 
-from aws_cdk import Environment
+from aws_cdk import Environment, aws_ecr as ecr, aws_iam as iam
 from constructs import Construct
 
 from cdk.aws_lc_analytics_stack import AwsLcGitHubAnalyticsStack
@@ -11,8 +11,6 @@ from cdk.aws_lc_github_actions_stack import AwsLcGitHubActionsStack
 from cdk.aws_lc_github_ci_stack import AwsLcGitHubCIStack
 from cdk.aws_lc_github_ci_x509_stack import AwsLcGitHubX509CIStack
 from cdk.aws_lc_github_fuzz_ci_stack import AwsLcGitHubFuzzCIStack
-from cdk.ecr_stack import EcrPrivateRepoStack
-from util.metadata import UBUNTU_ECR_REPO, AMAZONLINUX_ECR_REPO, CENTOS_ECR_REPO, FEDORA_ECR_REPO
 
 # Define CodeBuild Batch jobs for testing code.
 def add_ci_stacks(
@@ -117,17 +115,4 @@ def add_ci_stacks(
         ignore_failure=True,
         stack_name="aws-lc-ci-x509",
     )
-
-@dataclasses.dataclass
-class EcrRepoDataClass:
-    cdk_id: str
-    ecr_name: str
-
-def add_ecr_repos(scope: Construct, env: typing.Union[Environment, typing.Dict[str, typing.Any]]):
-    for x in [
-        EcrRepoDataClass("aws-lc-ecr-ubuntu", UBUNTU_ECR_REPO),
-        EcrRepoDataClass("aws-lc-ecr-amazonlinux", AMAZONLINUX_ECR_REPO),
-        EcrRepoDataClass("aws-lc-ecr-fedora", FEDORA_ECR_REPO),
-        EcrRepoDataClass("aws-lc-ecr-centos", CENTOS_ECR_REPO),
-    ]:
-        EcrPrivateRepoStack(scope, x.cdk_id, repo_name=x.ecr_name, env=env)
+   
