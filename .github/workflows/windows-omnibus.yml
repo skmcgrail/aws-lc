@@ -1,0 +1,40 @@
+name: linux-x86-omnibus
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["*"]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+env:
+  GOPROXY: https://proxy.golang.org,direct
+jobs:
+    windows2022_mscvc_compilers:
+      name: windows2022-${{ matrix.compiler }}-x86_64
+      runs-on:
+        - codebuild-aws-lc-ci-github-actions-${{ github.run_id }}-${{ github.run_attempt }}
+          image:windows2022-1.0
+          instance-size:large
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - compiler: vs2015
+              envPath: C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
+            - compiler: vs2017
+              envPath: C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvarsall.bat
+            - compiler: vs2019
+              envPath: C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvarsall.bat
+            - compiler: vs2022
+              envPath: C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat
+            - compiler: vs2022_sde
+              envPath: C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvarsall.bat
+              runSDE: true
+      steps:
+        - uses: actions/checkout@v5
+        - name: Login to Amazon ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v2
+        - shell: pwsh
+          run: .\tests\ci\run_windows_tests.bat "${{ matrix.envPath }}" "x64" "${{ matrix.runSDE || false }}"

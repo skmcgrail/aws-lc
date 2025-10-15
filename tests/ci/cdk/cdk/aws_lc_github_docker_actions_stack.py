@@ -17,7 +17,7 @@ from cdk.aws_lc_base_ci_stack import AwsLcBaseCiStack
 from util.iam_policies import (
     code_build_publish_metrics_in_json,
 )
-from util.metadata import UBUNTU_ECR_REPO, AMAZONLINUX_ECR_REPO, CENTOS_ECR_REPO, FEDORA_ECR_REPO
+from util.metadata import UBUNTU_ECR_REPO, AMAZONLINUX_ECR_REPO, CENTOS_ECR_REPO, FEDORA_ECR_REPO, WINDOWS_ECR_REPO
 
 class AwsLcGitHubDockerActionsStack(AwsLcBaseCiStack):
     """Define a stack used to execute AWS-LC self-hosted GitHub Actions Runners on Docker Images."""
@@ -36,7 +36,7 @@ class AwsLcGitHubDockerActionsStack(AwsLcBaseCiStack):
             code_build_publish_metrics_in_json(env)
         )
 
-        repo_names = [UBUNTU_ECR_REPO, AMAZONLINUX_ECR_REPO, CENTOS_ECR_REPO, FEDORA_ECR_REPO]
+        repo_names = [UBUNTU_ECR_REPO, AMAZONLINUX_ECR_REPO, CENTOS_ECR_REPO, FEDORA_ECR_REPO, WINDOWS_ECR_REPO]
         ecr_repos = [ecr.Repository.from_repository_name(self, x.replace('/', '-'), repository_name=x)
                      for x in repo_names]
         
