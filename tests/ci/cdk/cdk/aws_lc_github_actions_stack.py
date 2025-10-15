@@ -13,7 +13,6 @@ from aws_cdk import (
 from constructs import Construct
 
 from cdk.aws_lc_base_ci_stack import AwsLcBaseCiStack
-from cdk.components import PruneStaleGitHubBuilds
 from util.iam_policies import (
     code_build_publish_metrics_in_json,
 )

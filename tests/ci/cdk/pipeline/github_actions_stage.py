@@ -6,6 +6,7 @@ from aws_cdk import (
     Stack,
     pipelines,
 )
+from cdk.aws_lc_codebuild_fleets import AwsLcCodeBuildFleets
 from cdk.aws_lc_github_actions_stack import AwsLcGitHubActionsStack
 from cdk.aws_lc_github_docker_actions_stack import AwsLcGitHubDockerActionsStack
 from constructs import Construct
@@ -28,6 +29,10 @@ class GitHubActionsStage(Stage):
             env=pipeline_environment,
             **kwargs,
         )
+
+        self.codebuild_fleets = AwsLcCodeBuildFleets(self, "aws-lc-codebuild-fleets",
+                                                     env=deploy_environment,
+                                                     stack_name="aws-lc-codebuild-fleets")
 
         AwsLcGitHubActionsStack(
             self,

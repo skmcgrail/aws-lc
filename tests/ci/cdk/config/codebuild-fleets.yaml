@@ -1,0 +1,32 @@
+# CodeBuild Fleet Configuration
+# This file defines the configuration for multiple CodeBuild fleets with different compute types and scaling options
+
+fleets:
+  - name: linux-graviton2-2xlarge
+    baseCapacity: 1
+    environmentType: ARM_CONTAINER
+    customInstanceType: c6g.2xlarge
+    scalingConfiguration:
+      enabled: true
+      utilizationRate: 70
+  - name: linux-graviton4-2xlarge
+    baseCapacity: 1
+    environmentType: ARM_CONTAINER
+    customInstanceType: r8g.2xlarge
+    scalingConfiguration:
+      enabled: true
+      utilizationRate: 70
+  - name: windows-image-build
+    baseCapacity: 1
+    environmentType: WINDOWS_EC2
+    computeType: MEDIUM
+    scalingConfiguration:
+      enabled: true
+      utilizationRate: 70
+
+# Global configuration options
+globalSettings:
+  # Default tags applied to all fleets
+  defaultTags:
+    Project: "aws-lc"
+    ManagedBy: "cdk"
