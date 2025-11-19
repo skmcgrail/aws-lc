@@ -17,6 +17,8 @@ ENV PATH="$GOROOT/bin:/opt/sdk/cmdline-tools/latest/bin:$PATH"
 # ------------------------------------------------------
 # --- Android SDK
 
+RUN echo "foo bar baz"
+
 RUN <<EOF
 set -ex
 apt-get update -y
