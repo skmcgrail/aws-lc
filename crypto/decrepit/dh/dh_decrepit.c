@@ -53,6 +53,8 @@
 #include <openssl/bn.h>
 #include <openssl/dh.h>
 
+#include "../../fipsmodule/bn/internal.h"
+
 
 struct wrapped_callback {
   void (*callback)(int, int, void *);

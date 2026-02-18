@@ -6,6 +6,7 @@
 #include <openssl/dh.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
+#include "../crypto/fipsmodule/bn/internal.h"
 #include "../tool/internal.h"
 #include "internal.h"
 

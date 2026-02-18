@@ -684,32 +684,6 @@ OPENSSL_EXPORT int BN_pseudo_rand_range(BIGNUM *rnd, const BIGNUM *range);
 #define BN_GENCB_GENERATED 0
 #define BN_GENCB_PRIME_TEST 1
 
-// bn_gencb_st, or |BN_GENCB|, holds a callback function that is used by
-// generation functions that can take a very long time to complete. Use
-// |BN_GENCB_set| to initialise a |BN_GENCB| structure.
-//
-// The callback receives the address of that |BN_GENCB| structure as its last
-// argument and the user is free to put an arbitrary pointer in |arg|. The other
-// arguments are set as follows:
-// - event=BN_GENCB_GENERATED, n=i:   after generating the i'th possible prime
-//                                    number.
-// - event=BN_GENCB_PRIME_TEST, n=-1: when finished trial division primality
-//                                    checks.
-// - event=BN_GENCB_PRIME_TEST, n=i:  when the i'th primality test has finished.
-//
-// The callback can return zero to abort the generation progress or one to
-// allow it to continue.
-//
-// When other code needs to call a BN generation function it will often take a
-// BN_GENCB argument and may call the function with other argument values.
-struct bn_gencb_st {
-  uint8_t type;
-  void *arg;        // callback-specific data
-  union {
-    int (*new_style)(int event, int n, struct bn_gencb_st *);
-    void (*old_style)(int, int, void *);
-  } callback;
-};
 
 // BN_GENCB_new returns a newly-allocated |BN_GENCB| object, or NULL on
 // allocation failure. The result must be released with |BN_GENCB_free| when
