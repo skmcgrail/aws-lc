@@ -330,175 +330,229 @@ OPENSSL_STATIC_ASSERT(sizeof(void *) == 4, pointer_size_must_be_4_bytes_for_32_b
 #define OPENSSL_NOINLINE __attribute__((noinline))
 #endif
 
-// ossl_ssize_t is a signed type which is large enough to fit the size of any
-// valid memory allocation. We prefer using |size_t|, but sometimes we need a
-// signed type for OpenSSL API compatibility. This type can be used in such
-// cases to avoid overflow.
+// Import native AWS-LC type definitions. The canonical types use the AWSLC_
+// prefix and are defined in awslc/types.h. The typedef aliases below provide
+// OpenSSL-compatible type names.
 //
-// Not all |size_t| values fit in |ossl_ssize_t|, but all |size_t| values that
-// are sizes of or indices into C objects, can be converted without overflow.
-typedef ptrdiff_t ossl_ssize_t;
+// Note: We use typedef aliases (not #define macros) because the STACK_OF()
+// and DEFINE_STACK_OF() macros use token-pasting (##), which prevents macro
+// expansion. Typedef aliases are C-level constructs that don't interfere
+// with the preprocessor, ensuring consistent type names in all contexts.
+#include <awslc/types.h>
 
-// CBS_ASN1_TAG is the type used by |CBS| and |CBB| for ASN.1 tags. See that
-// header for details. This type is defined in base.h as a forward declaration.
-typedef uint32_t CBS_ASN1_TAG;
+// OpenSSL compatibility type aliases — primitive types
+typedef AWSLC_ossl_ssize_t ossl_ssize_t;
+typedef AWSLC_CBS_ASN1_TAG CBS_ASN1_TAG;
+typedef AWSLC_CRYPTO_THREADID CRYPTO_THREADID;
+typedef AWSLC_ASN1_BOOLEAN ASN1_BOOLEAN;
+typedef AWSLC_OPENSSL_BLOCK OPENSSL_BLOCK;
 
-// CRYPTO_THREADID is a dummy value.
-typedef int CRYPTO_THREADID;
+// OpenSSL compatibility type aliases — ASN.1 types
+typedef AWSLC_ASN1_NULL ASN1_NULL;
+typedef AWSLC_ASN1_ITEM ASN1_ITEM;
+typedef AWSLC_ASN1_OBJECT ASN1_OBJECT;
+typedef AWSLC_ASN1_PCTX ASN1_PCTX;
+typedef AWSLC_ASN1_BIT_STRING ASN1_BIT_STRING;
+typedef AWSLC_ASN1_BMPSTRING ASN1_BMPSTRING;
+typedef AWSLC_ASN1_ENUMERATED ASN1_ENUMERATED;
+typedef AWSLC_ASN1_GENERALIZEDTIME ASN1_GENERALIZEDTIME;
+typedef AWSLC_ASN1_GENERALSTRING ASN1_GENERALSTRING;
+typedef AWSLC_ASN1_IA5STRING ASN1_IA5STRING;
+typedef AWSLC_ASN1_INTEGER ASN1_INTEGER;
+typedef AWSLC_ASN1_OCTET_STRING ASN1_OCTET_STRING;
+typedef AWSLC_ASN1_PRINTABLESTRING ASN1_PRINTABLESTRING;
+typedef AWSLC_ASN1_STRING ASN1_STRING;
+typedef AWSLC_ASN1_T61STRING ASN1_T61STRING;
+typedef AWSLC_ASN1_TIME ASN1_TIME;
+typedef AWSLC_ASN1_UNIVERSALSTRING ASN1_UNIVERSALSTRING;
+typedef AWSLC_ASN1_UTCTIME ASN1_UTCTIME;
+typedef AWSLC_ASN1_UTF8STRING ASN1_UTF8STRING;
+typedef AWSLC_ASN1_VISIBLESTRING ASN1_VISIBLESTRING;
+typedef AWSLC_ASN1_TYPE ASN1_TYPE;
 
-// An |ASN1_NULL| is an opaque type. asn1.h represents the ASN.1 NULL value as
-// an opaque, non-NULL |ASN1_NULL*| pointer.
-typedef struct asn1_null_st ASN1_NULL;
+// OpenSSL compatibility type aliases — X.509 types
+typedef AWSLC_AUTHORITY_KEYID AUTHORITY_KEYID;
+typedef AWSLC_BASIC_CONSTRAINTS BASIC_CONSTRAINTS;
+typedef AWSLC_DIST_POINT DIST_POINT;
+typedef AWSLC_GENERAL_NAME GENERAL_NAME;
+typedef AWSLC_ISSUING_DIST_POINT ISSUING_DIST_POINT;
+typedef AWSLC_NAME_CONSTRAINTS NAME_CONSTRAINTS;
+typedef AWSLC_NETSCAPE_SPKAC NETSCAPE_SPKAC;
+typedef AWSLC_NETSCAPE_SPKI NETSCAPE_SPKI;
+typedef AWSLC_X509_VERIFY_PARAM X509_VERIFY_PARAM;
+typedef AWSLC_X509_ALGOR X509_ALGOR;
+typedef AWSLC_X509_CRL X509_CRL;
+typedef AWSLC_X509_EXTENSION X509_EXTENSION;
+typedef AWSLC_X509_INFO X509_INFO;
+typedef AWSLC_X509_NAME_ENTRY X509_NAME_ENTRY;
+typedef AWSLC_X509_NAME X509_NAME;
+typedef AWSLC_X509_PUBKEY X509_PUBKEY;
+typedef AWSLC_X509_REQ X509_REQ;
+typedef AWSLC_X509_SIG_INFO X509_SIG_INFO;
+typedef AWSLC_X509_SIG X509_SIG;
+typedef AWSLC_X509V3_CTX X509V3_CTX;
+typedef AWSLC_X509V3_EXT_METHOD X509V3_EXT_METHOD;
+typedef AWSLC_X509_ATTRIBUTE X509_ATTRIBUTE;
+typedef AWSLC_X509_LOOKUP X509_LOOKUP;
+typedef AWSLC_X509_LOOKUP_METHOD X509_LOOKUP_METHOD;
+typedef AWSLC_X509_OBJECT X509_OBJECT;
+typedef AWSLC_X509_REVOKED X509_REVOKED;
+typedef AWSLC_X509 X509;
+typedef AWSLC_X509_STORE_CTX X509_STORE_CTX;
+typedef AWSLC_X509_STORE X509_STORE;
+typedef AWSLC_X509_TRUST X509_TRUST;
+typedef AWSLC_X509_PKEY X509_PKEY;
 
-typedef int ASN1_BOOLEAN;
-typedef struct ASN1_ITEM_st ASN1_ITEM;
-typedef struct asn1_object_st ASN1_OBJECT;
-typedef struct asn1_pctx_st ASN1_PCTX;
-typedef struct asn1_string_st ASN1_BIT_STRING;
-typedef struct asn1_string_st ASN1_BMPSTRING;
-typedef struct asn1_string_st ASN1_ENUMERATED;
-typedef struct asn1_string_st ASN1_GENERALIZEDTIME;
-typedef struct asn1_string_st ASN1_GENERALSTRING;
-typedef struct asn1_string_st ASN1_IA5STRING;
-typedef struct asn1_string_st ASN1_INTEGER;
-typedef struct asn1_string_st ASN1_OCTET_STRING;
-typedef struct asn1_string_st ASN1_PRINTABLESTRING;
-typedef struct asn1_string_st ASN1_STRING;
-typedef struct asn1_string_st ASN1_T61STRING;
-typedef struct asn1_string_st ASN1_TIME;
-typedef struct asn1_string_st ASN1_UNIVERSALSTRING;
-typedef struct asn1_string_st ASN1_UTCTIME;
-typedef struct asn1_string_st ASN1_UTF8STRING;
-typedef struct asn1_string_st ASN1_VISIBLESTRING;
-typedef struct asn1_type_st ASN1_TYPE;
-typedef struct AUTHORITY_KEYID_st AUTHORITY_KEYID;
-typedef struct BASIC_CONSTRAINTS_st BASIC_CONSTRAINTS;
-typedef struct DIST_POINT_st DIST_POINT;
-typedef struct DSA_SIG_st DSA_SIG;
-typedef struct GENERAL_NAME_st GENERAL_NAME;
-typedef struct ISSUING_DIST_POINT_st ISSUING_DIST_POINT;
-typedef struct NAME_CONSTRAINTS_st NAME_CONSTRAINTS;
-typedef struct Netscape_spkac_st NETSCAPE_SPKAC;
-typedef struct Netscape_spki_st NETSCAPE_SPKI;
-typedef struct RIPEMD160state_st RIPEMD160_CTX;
-typedef struct X509_VERIFY_PARAM_st X509_VERIFY_PARAM;
-typedef struct X509_algor_st X509_ALGOR;
-typedef struct X509_crl_st X509_CRL;
-typedef struct X509_extension_st X509_EXTENSION;
-typedef struct X509_info_st X509_INFO;
-typedef struct X509_name_entry_st X509_NAME_ENTRY;
-typedef struct X509_name_st X509_NAME;
-typedef struct X509_pubkey_st X509_PUBKEY;
-typedef struct X509_req_st X509_REQ;
-typedef struct x509_sig_info_st X509_SIG_INFO;
-typedef struct X509_sig_st X509_SIG;
-typedef struct bignum_ctx BN_CTX;
-typedef struct bignum_st BIGNUM;
-typedef struct bio_method_st BIO_METHOD;
-typedef struct bio_st BIO;
-typedef struct blake2b_state_st BLAKE2B_CTX;
-typedef struct bn_gencb_st BN_GENCB;
-typedef struct bn_mont_ctx_st BN_MONT_CTX;
-typedef struct buf_mem_st BUF_MEM;
-typedef struct cast_key_st CAST_KEY;
-typedef struct cbb_st CBB;
-typedef struct cbs_st CBS;
-typedef struct cmac_ctx_st CMAC_CTX;
-typedef struct conf_st CONF;
-typedef struct conf_value_st CONF_VALUE;
-typedef struct crypto_buffer_pool_st CRYPTO_BUFFER_POOL;
-typedef struct crypto_buffer_st CRYPTO_BUFFER;
-typedef struct ctr_drbg_state_st CTR_DRBG_STATE;
-typedef struct dh_st DH;
-typedef struct dsa_st DSA;
-typedef struct ec_group_st EC_GROUP;
-typedef struct ec_key_st EC_KEY;
-typedef struct ec_point_st EC_POINT;
-typedef struct ec_key_method_st EC_KEY_METHOD;
-typedef struct ecdsa_sig_st ECDSA_SIG;
-typedef struct engine_st ENGINE;
-typedef struct env_md_ctx_st EVP_MD_CTX;
-typedef struct env_md_st EVP_MD;
-typedef struct evp_aead_st EVP_AEAD;
-typedef struct evp_aead_ctx_st EVP_AEAD_CTX;
-typedef struct evp_cipher_ctx_st EVP_CIPHER_CTX;
-typedef struct evp_cipher_st EVP_CIPHER;
+// OpenSSL compatibility type aliases — BigNum types
+typedef AWSLC_BN_CTX BN_CTX;
+typedef AWSLC_BIGNUM BIGNUM;
+typedef AWSLC_BN_GENCB BN_GENCB;
+typedef AWSLC_BN_MONT_CTX BN_MONT_CTX;
 
-/**
- * @typedef EVP_ENCODE_CTX
- * @copydoc evp_encode_ctx_st
- * @see evp_encode_ctx_st
- */
-typedef struct evp_encode_ctx_st EVP_ENCODE_CTX;
-typedef struct evp_hpke_aead_st EVP_HPKE_AEAD;
-typedef struct evp_hpke_ctx_st EVP_HPKE_CTX;
-typedef struct evp_hpke_kdf_st EVP_HPKE_KDF;
-typedef struct evp_hpke_kem_st EVP_HPKE_KEM;
-typedef struct evp_hpke_key_st EVP_HPKE_KEY;
-typedef struct evp_kem_st EVP_KEM;
-typedef struct kem_key_st KEM_KEY;
-typedef struct evp_pkey_ctx_st EVP_PKEY_CTX;
-typedef struct evp_pkey_asn1_method_st EVP_PKEY_ASN1_METHOD;
-typedef struct evp_pkey_st EVP_PKEY;
-typedef struct evp_pkey_ctx_signature_context_params_st EVP_PKEY_CTX_SIGNATURE_CONTEXT_PARAMS;
-typedef struct hmac_ctx_st HMAC_CTX;
-typedef struct md4_state_st MD4_CTX;
-typedef struct md5_state_st MD5_CTX;
-typedef struct pqdsa_key_st PQDSA_KEY;
-typedef struct ocsp_req_ctx_st OCSP_REQ_CTX;
-typedef struct ossl_init_settings_st OPENSSL_INIT_SETTINGS;
-typedef struct pkcs7_digest_st PKCS7_DIGEST;
-typedef struct pkcs7_enc_content_st PKCS7_ENC_CONTENT;
-typedef struct pkcs7_encrypt_st PKCS7_ENCRYPT;
-typedef struct pkcs7_envelope_st PKCS7_ENVELOPE;
-typedef struct pkcs7_issuer_and_serial_st PKCS7_ISSUER_AND_SERIAL;
-typedef struct pkcs7_recip_info_st PKCS7_RECIP_INFO;
-typedef struct pkcs7_sign_envelope_st PKCS7_SIGN_ENVELOPE;
-typedef struct pkcs7_signed_st PKCS7_SIGNED;
-typedef struct pkcs7_signer_info_st PKCS7_SIGNER_INFO;
-typedef struct pkcs7_st PKCS7;
-typedef struct pkcs12_st PKCS12;
-typedef struct pkcs8_priv_key_info_st PKCS8_PRIV_KEY_INFO;
-typedef struct private_key_st X509_PKEY;
-typedef struct rand_meth_st RAND_METHOD;
-typedef struct rc4_key_st RC4_KEY;
-typedef struct rsa_meth_st RSA_METHOD;
-typedef struct rsassa_pss_params_st RSASSA_PSS_PARAMS;
-typedef struct rsa_pss_params_st RSA_PSS_PARAMS;
-typedef struct rsa_st RSA;
-typedef struct sha256_state_st SHA256_CTX;
-typedef struct sha512_state_st SHA512_CTX;
-typedef struct sha_state_st SHA_CTX;
-typedef struct spake2_ctx_st SPAKE2_CTX;
-typedef struct srtp_protection_profile_st SRTP_PROTECTION_PROFILE;
-typedef struct ssl_cipher_st SSL_CIPHER;
-typedef struct ssl_ctx_st SSL_CTX;
-typedef struct ssl_early_callback_ctx SSL_CLIENT_HELLO;
-typedef struct ssl_ech_keys_st SSL_ECH_KEYS;
-typedef struct ssl_method_st SSL_METHOD;
-typedef struct ssl_private_key_method_st SSL_PRIVATE_KEY_METHOD;
-typedef struct ssl_quic_method_st SSL_QUIC_METHOD;
-typedef struct ssl_session_st SSL_SESSION;
-typedef struct ssl_st SSL;
-typedef struct ssl_ticket_aead_method_st SSL_TICKET_AEAD_METHOD;
-typedef struct st_ERR_FNS ERR_FNS;
-typedef struct trust_token_st TRUST_TOKEN;
-typedef struct trust_token_client_st TRUST_TOKEN_CLIENT;
-typedef struct trust_token_issuer_st TRUST_TOKEN_ISSUER;
-typedef struct trust_token_method_st TRUST_TOKEN_METHOD;
-typedef struct v3_ext_ctx X509V3_CTX;
-typedef struct v3_ext_method X509V3_EXT_METHOD;
-typedef struct x509_attributes_st X509_ATTRIBUTE;
-typedef struct x509_lookup_st X509_LOOKUP;
-typedef struct x509_lookup_method_st X509_LOOKUP_METHOD;
-typedef struct x509_object_st X509_OBJECT;
-typedef struct x509_revoked_st X509_REVOKED;
-typedef struct x509_st X509;
-typedef struct x509_store_ctx_st X509_STORE_CTX;
-typedef struct x509_store_st X509_STORE;
-typedef struct x509_trust_st X509_TRUST;
+// OpenSSL compatibility type aliases — BIO types
+typedef AWSLC_BIO_METHOD BIO_METHOD;
+typedef AWSLC_BIO BIO;
 
-typedef void *OPENSSL_BLOCK;
+// OpenSSL compatibility type aliases — Buffer types
+typedef AWSLC_BUF_MEM BUF_MEM;
+typedef AWSLC_CBB CBB;
+typedef AWSLC_CBS CBS;
+
+// OpenSSL compatibility type aliases — Symmetric cipher types
+typedef AWSLC_CAST_KEY CAST_KEY;
+typedef AWSLC_RC4_KEY RC4_KEY;
+
+// OpenSSL compatibility type aliases — Hash / digest types
+typedef AWSLC_BLAKE2B_CTX BLAKE2B_CTX;
+typedef AWSLC_RIPEMD160_CTX RIPEMD160_CTX;
+typedef AWSLC_SHA256_CTX SHA256_CTX;
+typedef AWSLC_SHA512_CTX SHA512_CTX;
+typedef AWSLC_SHA_CTX SHA_CTX;
+typedef AWSLC_MD4_CTX MD4_CTX;
+typedef AWSLC_MD5_CTX MD5_CTX;
+
+// OpenSSL compatibility type aliases — CMAC / HMAC types
+typedef AWSLC_CMAC_CTX CMAC_CTX;
+typedef AWSLC_HMAC_CTX HMAC_CTX;
+
+// OpenSSL compatibility type aliases — Configuration types
+typedef AWSLC_CONF CONF;
+typedef AWSLC_CONF_VALUE CONF_VALUE;
+
+// OpenSSL compatibility type aliases — CRYPTO buffer types
+typedef AWSLC_CRYPTO_BUFFER_POOL CRYPTO_BUFFER_POOL;
+typedef AWSLC_CRYPTO_BUFFER CRYPTO_BUFFER;
+
+// OpenSSL compatibility type aliases — DRBG types
+typedef AWSLC_CTR_DRBG_STATE CTR_DRBG_STATE;
+
+// OpenSSL compatibility type aliases — DH / DSA types
+typedef AWSLC_DH DH;
+typedef AWSLC_DSA DSA;
+typedef AWSLC_DSA_SIG DSA_SIG;
+
+// OpenSSL compatibility type aliases — EC types
+typedef AWSLC_EC_GROUP EC_GROUP;
+typedef AWSLC_EC_KEY EC_KEY;
+typedef AWSLC_EC_POINT EC_POINT;
+typedef AWSLC_EC_KEY_METHOD EC_KEY_METHOD;
+typedef AWSLC_ECDSA_SIG ECDSA_SIG;
+
+// OpenSSL compatibility type aliases — Engine type
+typedef AWSLC_ENGINE ENGINE;
+
+// OpenSSL compatibility type aliases — EVP digest types
+typedef AWSLC_EVP_MD_CTX EVP_MD_CTX;
+typedef AWSLC_EVP_MD EVP_MD;
+
+// OpenSSL compatibility type aliases — EVP AEAD types
+typedef AWSLC_EVP_AEAD EVP_AEAD;
+typedef AWSLC_EVP_AEAD_CTX EVP_AEAD_CTX;
+
+// OpenSSL compatibility type aliases — EVP cipher types
+typedef AWSLC_EVP_CIPHER_CTX EVP_CIPHER_CTX;
+typedef AWSLC_EVP_CIPHER EVP_CIPHER;
+
+// OpenSSL compatibility type aliases — EVP encode types
+typedef AWSLC_EVP_ENCODE_CTX EVP_ENCODE_CTX;
+
+// OpenSSL compatibility type aliases — EVP HPKE types
+typedef AWSLC_EVP_HPKE_AEAD EVP_HPKE_AEAD;
+typedef AWSLC_EVP_HPKE_CTX EVP_HPKE_CTX;
+typedef AWSLC_EVP_HPKE_KDF EVP_HPKE_KDF;
+typedef AWSLC_EVP_HPKE_KEM EVP_HPKE_KEM;
+typedef AWSLC_EVP_HPKE_KEY EVP_HPKE_KEY;
+
+// OpenSSL compatibility type aliases — EVP KEM types
+typedef AWSLC_EVP_KEM EVP_KEM;
+typedef AWSLC_KEM_KEY KEM_KEY;
+
+// OpenSSL compatibility type aliases — EVP PKEY types
+typedef AWSLC_EVP_PKEY_CTX EVP_PKEY_CTX;
+typedef AWSLC_EVP_PKEY_ASN1_METHOD EVP_PKEY_ASN1_METHOD;
+typedef AWSLC_EVP_PKEY EVP_PKEY;
+typedef AWSLC_EVP_PKEY_CTX_SIGNATURE_CONTEXT_PARAMS EVP_PKEY_CTX_SIGNATURE_CONTEXT_PARAMS;
+
+// OpenSSL compatibility type aliases — Post-quantum types
+typedef AWSLC_PQDSA_KEY PQDSA_KEY;
+
+// OpenSSL compatibility type aliases — OCSP types
+typedef AWSLC_OCSP_REQ_CTX OCSP_REQ_CTX;
+
+// OpenSSL compatibility type aliases — OpenSSL init settings
+typedef AWSLC_OPENSSL_INIT_SETTINGS OPENSSL_INIT_SETTINGS;
+
+// OpenSSL compatibility type aliases — PKCS7 types
+typedef AWSLC_PKCS7_DIGEST PKCS7_DIGEST;
+typedef AWSLC_PKCS7_ENC_CONTENT PKCS7_ENC_CONTENT;
+typedef AWSLC_PKCS7_ENCRYPT PKCS7_ENCRYPT;
+typedef AWSLC_PKCS7_ENVELOPE PKCS7_ENVELOPE;
+typedef AWSLC_PKCS7_ISSUER_AND_SERIAL PKCS7_ISSUER_AND_SERIAL;
+typedef AWSLC_PKCS7_RECIP_INFO PKCS7_RECIP_INFO;
+typedef AWSLC_PKCS7_SIGN_ENVELOPE PKCS7_SIGN_ENVELOPE;
+typedef AWSLC_PKCS7_SIGNED PKCS7_SIGNED;
+typedef AWSLC_PKCS7_SIGNER_INFO PKCS7_SIGNER_INFO;
+typedef AWSLC_PKCS7 PKCS7;
+
+// OpenSSL compatibility type aliases — PKCS8 / PKCS12 types
+typedef AWSLC_PKCS12 PKCS12;
+typedef AWSLC_PKCS8_PRIV_KEY_INFO PKCS8_PRIV_KEY_INFO;
+
+// OpenSSL compatibility type aliases — RAND types
+typedef AWSLC_RAND_METHOD RAND_METHOD;
+
+// OpenSSL compatibility type aliases — RSA types
+typedef AWSLC_RSA_METHOD RSA_METHOD;
+typedef AWSLC_RSASSA_PSS_PARAMS RSASSA_PSS_PARAMS;
+typedef AWSLC_RSA_PSS_PARAMS RSA_PSS_PARAMS;
+typedef AWSLC_RSA RSA;
+
+// OpenSSL compatibility type aliases — SPAKE2 types
+typedef AWSLC_SPAKE2_CTX SPAKE2_CTX;
+
+// OpenSSL compatibility type aliases — SRTP types
+typedef AWSLC_SRTP_PROTECTION_PROFILE SRTP_PROTECTION_PROFILE;
+
+// OpenSSL compatibility type aliases — SSL types
+typedef AWSLC_SSL_CIPHER SSL_CIPHER;
+typedef AWSLC_SSL_CTX SSL_CTX;
+typedef AWSLC_SSL_CLIENT_HELLO SSL_CLIENT_HELLO;
+typedef AWSLC_SSL_ECH_KEYS SSL_ECH_KEYS;
+typedef AWSLC_SSL_METHOD SSL_METHOD;
+typedef AWSLC_SSL_PRIVATE_KEY_METHOD SSL_PRIVATE_KEY_METHOD;
+typedef AWSLC_SSL_QUIC_METHOD SSL_QUIC_METHOD;
+typedef AWSLC_SSL_SESSION SSL_SESSION;
+typedef AWSLC_SSL SSL;
+typedef AWSLC_SSL_TICKET_AEAD_METHOD SSL_TICKET_AEAD_METHOD;
+
+// OpenSSL compatibility type aliases — Error types
+typedef AWSLC_ERR_FNS ERR_FNS;
+
+// OpenSSL compatibility type aliases — Trust Token types
+typedef AWSLC_TRUST_TOKEN TRUST_TOKEN;
+typedef AWSLC_TRUST_TOKEN_CLIENT TRUST_TOKEN_CLIENT;
+typedef AWSLC_TRUST_TOKEN_ISSUER TRUST_TOKEN_ISSUER;
+typedef AWSLC_TRUST_TOKEN_METHOD TRUST_TOKEN_METHOD;
 
 // BSSL_CHECK aborts if |condition| is not true.
 #define BSSL_CHECK(condition) \

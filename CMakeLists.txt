@@ -271,6 +271,11 @@ install(DIRECTORY include/openssl
         PATTERN "*.in" EXCLUDE
 )
 
+install(DIRECTORY include/awslc
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        COMPONENT Development
+)
+
 if (TEST_SYSGENID_PATH)
   message(STATUS "Setting AWSLC_VM_UBE_TESTING=1")
   add_definitions(-DAWSLC_VM_UBE_TESTING=1)
