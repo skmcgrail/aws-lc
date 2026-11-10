@@ -581,6 +581,13 @@ add_library(
 target_compile_definitions(crypto_objects PRIVATE BORINGSSL_IMPLEMENTATION)
 target_add_awslc_include_paths(TARGET crypto_objects SCOPE PRIVATE)
 
+if(ENABLE_RUST)
+  # C side of the Rust integration; the Rust code itself is linked in
+  # build_libcrypto(). AWSLC_RUST is deliberately not visible to fipsmodule.
+  target_sources(crypto_objects PRIVATE rust/rust.c)
+  target_compile_definitions(crypto_objects PRIVATE AWSLC_RUST)
+endif()
+
 function(build_libcrypto)
   set(options SET_OUTPUT_NAME)
   set(oneValueArgs NAME)
@@ -628,6 +635,24 @@ function(build_libcrypto)
     target_link_libraries(${arg_NAME} PUBLIC Threads::Threads)
   endif()
   target_add_awslc_include_paths(TARGET ${arg_NAME} SCOPE PUBLIC)
+
+  if(ENABLE_RUST)
+    if(BUILD_SHARED_LIBS)
+      target_link_libraries(${arg_NAME} PRIVATE caracal_ffi)
+      if(UNIX AND NOT APPLE)
+        # The archive also carries the Rust core library, whose symbols have
+        # default visibility. Keep all of them out of the dynamic symbol table.
+        target_link_libraries(${arg_NAME} PRIVATE
+          "-Wl,--exclude-libs,${caracal_ffi_FILE_NAME}")
+      endif()
+    else()
+      # Consumers of a static libcrypto link the Rust archive themselves. It is
+      # installed next to libcrypto; see the install rules below.
+      target_link_libraries(${arg_NAME} PRIVATE
+        $<BUILD_INTERFACE:caracal_ffi>
+        "$<INSTALL_INTERFACE:\${_IMPORT_PREFIX}/${CMAKE_INSTALL_LIBDIR}/${caracal_ffi_FILE_NAME}>")
+    endif()
+  endif()
 
   if(arg_SET_OUTPUT_NAME)
     set_target_properties(${arg_NAME} PROPERTIES OUTPUT_NAME "${CRYPTO_LIB_NAME}")
@@ -873,6 +898,10 @@ if(BUILD_TESTING)
     $<TARGET_OBJECTS:crypto_test_data>
   )
   set_test_location(${CRYPTO_TEST_EXEC})
+  if(ENABLE_RUST)
+    target_sources(${CRYPTO_TEST_EXEC} PRIVATE rust/rust_test.cc)
+    target_compile_definitions(${CRYPTO_TEST_EXEC} PRIVATE AWSLC_RUST)
+  endif()
 
   target_link_libraries(${CRYPTO_TEST_EXEC} boringssl_gtest_main)
   target_add_awslc_include_paths(TARGET ${CRYPTO_TEST_EXEC} SCOPE PRIVATE)
@@ -949,6 +978,10 @@ endif()
 
 if(MSVC AND CMAKE_BUILD_TYPE_LOWER MATCHES "relwithdebinfo" AND FIPS)
   install (FILES $<TARGET_FILE_DIR:crypto>/crypto.pdb DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+
+if(ENABLE_RUST AND NOT BUILD_SHARED_LIBS)
+  install(FILES $<TARGET_FILE:caracal_ffi> DESTINATION ${CMAKE_INSTALL_LIBDIR})
 endif()
 
 configure_file("cmake/crypto-config.cmake"

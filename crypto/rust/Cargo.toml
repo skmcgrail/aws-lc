@@ -1,0 +1,35 @@
+# Copyright Amazon.com Inc. or its affiliates. All Rights Reserved.
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+
+# Rust components of libcrypto. Built by CMake when configured with
+# -DENABLE_RUST=ON; see README.md.
+
+[workspace]
+resolver = "3"
+members = ["caracal", "caracal-ffi"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "Apache-2.0 OR ISC"
+publish = false
+
+[workspace.dependencies]
+caracal = { path = "caracal" }
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+undocumented_unsafe_blocks = "deny"
+
+# The staticlib is linked into libcrypto, which has no Rust runtime to unwind
+# into. Unwinding across the C ABI is undefined behaviour, so abort instead.
+# (Cargo ignores this for `cargo test`, which needs unwinding.)
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
