@@ -37,6 +37,7 @@ option(ENABLE_PRE_SONAME_BUILD "Build AWS-LC without SONAME configuration for sh
 option(ENABLE_SOURCE_MODIFICATION "Allow the build to update files in the source directory. This is typically done to update versioning." ON)
 option(DISABLE_CPU_JITTER_ENTROPY "Disable usage of CPU Jitter Entropy as an entropy source. This option cannot be used with the FIPS build. With this configuration, randomness generation might not use two independent entropy sources." OFF)
 option(GENERATE_RUST_BINDINGS "Generate Rust bindings using bindgen-cli" OFF)
+option(ENABLE_RUST "Build the Rust components under crypto/rust into libcrypto (experimental; requires cargo)" OFF)
 option(ENABLE_DIST_PKG "Enables a set of packaging that take highest precedence to any other packaging configuration i.e. ENABLE_PRE_SONAME_BUILD" OFF)
 option(ENABLE_DIST_PKG_OPENSSL_SHIM "Controls whether the OpenSSL shim components are installed when ENABLE_DIST_PKG is enabled" OFF)
 option(BUILD_AWSLC_PROVIDER "Build the OpenSSL provider backed by AWS-LC. Requires OpenSSL 3.5+ headers; set OPENSSL_ROOT_DIR if they are not in system paths" OFF)
@@ -331,6 +332,24 @@ if(GENERATE_RUST_BINDINGS)
     message(STATUS "rustfmt not found; generated Rust bindings will not be formatted. "
                    "Install it with: rustup component add rustfmt")
   endif()
+endif()
+
+# Validate Rust component prerequisites. These configurations are not yet
+# supported: the FIPS module boundary has not been defined for Rust code,
+# BORINGSSL_PREFIX does not rename symbols defined in Rust, and symbol
+# versioning would hide the Rust test hooks, which are not in the registry.
+if(ENABLE_RUST)
+  if(FIPS)
+    message(FATAL_ERROR "ENABLE_RUST is not yet supported with FIPS")
+  endif()
+  if(BORINGSSL_PREFIX)
+    message(FATAL_ERROR "ENABLE_RUST is not yet supported with BORINGSSL_PREFIX")
+  endif()
+  if(ENABLE_SYMBOL_VERSIONING)
+    message(FATAL_ERROR "ENABLE_RUST is not yet supported with symbol versioning; "
+                        "configure with -DENABLE_SYMBOL_VERSIONING=OFF")
+  endif()
+  include(cmake/cargo.cmake)
 endif()
 
 if(DISABLE_CPU_JITTER_ENTROPY)
@@ -1515,6 +1534,18 @@ else()
   set(PKGCONFIG_LIBS_PRIVATE "")
 endif()
 
+if(ENABLE_RUST)
+  # Rust components of libcrypto. Defined here, rather than in crypto/, so the
+  # imported target is visible to every directory that links libcrypto.
+  cargo_add_staticlib(caracal_ffi
+    MANIFEST_PATH "${AWSLC_SOURCE_DIR}/crypto/rust/Cargo.toml"
+    PACKAGE caracal-ffi
+    LIB_NAME caracal_ffi)
+  if(NOT BUILD_SHARED_LIBS)
+    # A static libcrypto needs the Rust archive at the final link.
+    string(STRIP "${PKGCONFIG_LIBS_PRIVATE} -lcaracal_ffi" PKGCONFIG_LIBS_PRIVATE)
+  endif()
+endif()
 
 add_subdirectory(crypto)
 if(BUILD_LIBSSL)
